@@ -45,7 +45,7 @@ lightbox.addEventListener('click', event => { if (event.target !== lightboxImage
 const rotator = document.querySelector('#studio');
 const video = document.querySelector('#tee-rotator');
 const hit = rotator.querySelector('.tee-hit');
-const frameCount = 216;
+const frameCount = 233;
 const fps = 24;
 // One full loop takes the same 840 px of drag as the original 120-frame turntable.
 const pixelsPerFrame = 840 / frameCount;
@@ -136,7 +136,7 @@ hit.addEventListener('pointercancel', endRotate);
 const usePoster = () => {
   const still = new Image();
   still.id = 'tee-rotator';
-  still.src = 'assets/tshirt-rotate-banner-poster.jpg?v=3';
+  still.src = 'assets/tshirt-rotate-banner-poster.jpg?v=4';
   still.alt = 'Faith tee en un estudio';
   still.draggable = false;
   video.replaceWith(still);
