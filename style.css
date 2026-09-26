@@ -64,3 +64,36 @@
 @media(max-width:520px){.hero-purchase{top:calc(496px + 3*var(--g));gap:2px 20px}.hero-purchase .primary-button{margin-top:5px}.hero-purchase .launch-note{font-size:7px}.hero-guide{font-size:9px;padding:2px 0}.hero-purchase .stock-count{font-size:9px}.drop-current{grid-template-columns:1fr 1fr}.drop-current>span:last-child{text-align:left;grid-column:1/3}.drop-archive{display:block}.drop-archive p{margin-top:12px}.size-guide{padding:22px 16px}.size-guide th,.size-guide td{padding:8px 9px}}
 @media(max-width:520px){.size-guide table{min-width:0;table-layout:fixed}.size-guide th,.size-guide td{padding:8px 3px;font-size:11px}.size-guide thead th{font-size:7px;letter-spacing:.02em;white-space:normal;line-height:1.3}.size-guide th:first-child{width:18%}.size-guide th:nth-child(2){width:27%}.size-guide th:nth-child(3){width:29%}.size-guide th:nth-child(4){width:26%}}
 .drop-inventory-note{font-size:10px;color:#777;margin:0 0 25px}
+
+/* Drop 001 - FAITH editorial story section. */
+.faith-story{border-top:1px solid var(--line);padding:96px 0 0;background:#080808}
+.faith-intro{text-align:center;padding:0 6%}
+.faith-intro h2{font-size:clamp(44px,6.4vw,92px);letter-spacing:-.055em;margin-top:30px}
+.faith-hero{position:relative;margin:76px 0 0}
+.faith-hero img{width:100%;aspect-ratio:3/2;object-fit:cover}
+.faith-hero-copy{position:absolute;left:6%;right:6%;bottom:9%;max-width:560px}
+.faith-hero-copy p{font:clamp(19px,2.2vw,29px)/1.55 Georgia,serif;letter-spacing:-.02em;text-shadow:0 1px 26px #000d}
+.faith-duo{display:grid;grid-template-columns:minmax(0,42%) 1fr;gap:6vw;align-items:center;padding:88px 6%}
+.faith-devotion img{width:100%;aspect-ratio:2/3;object-fit:cover}
+.faith-text{font:clamp(21px,2.5vw,33px)/1.6 Georgia,serif;letter-spacing:-.025em;max-width:600px}
+.faith-spark{position:relative}
+.faith-spark img{width:100%;aspect-ratio:3/2;object-fit:cover;max-height:84svh}
+.faith-close{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:36px;text-align:center;padding:0 8%}
+.faith-close p{font:clamp(18px,2vw,27px)/1.65 Georgia,serif;letter-spacing:-.015em;max-width:700px;text-shadow:0 1px 26px #000d}
+/* Soft scroll-in reveal (reduced motion keeps everything visible). */
+[data-reveal]{opacity:0;transform:translateY(26px);transition:opacity 1s ease,transform 1s ease}
+[data-reveal].is-revealed{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){[data-reveal]{opacity:1;transform:none}}
+@media(max-width:900px){.faith-story{padding-top:64px}.faith-intro h2{font-size:clamp(38px,10vw,56px)}.faith-hero{margin-top:52px}.faith-hero img{aspect-ratio:4/5}.faith-hero-copy{bottom:7%}.faith-duo{grid-template-columns:1fr;gap:36px;padding:56px 6%}.faith-devotion{max-width:340px;margin:auto}.faith-text{max-width:none}.faith-spark img{aspect-ratio:4/5;max-height:none}}
+
+/* Faith editorial: scroll-driven motion (transform/opacity only, reduced-motion safe). */
+.faith-hero,.faith-spark,.faith-devotion{overflow:hidden}
+.faith-hero img,.faith-spark img,.faith-devotion img{transform:scale(1.18);will-change:transform}
+.faith-close{z-index:2;background:radial-gradient(ellipse 54% 48% at 50% 50%,rgba(0,0,0,.60),transparent 78%)}
+.faith-glow{position:relative}
+.faith-glow::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse 34% 26% at var(--gx,50%) var(--gy,50%),rgba(255,179,92,.30),transparent 72%);animation:faith-breathe 6s ease-in-out infinite alternate}
+.faith-spark.faith-glow::after{background:radial-gradient(ellipse 26% 30% at var(--gx,50%) var(--gy,50%),rgba(255,190,110,.34),transparent 74%)}
+@keyframes faith-breathe{from{opacity:.35}to{opacity:1}}
+.faith-copy-line{display:inline-block;opacity:0;filter:blur(7px);transform:translateY(14px);transition:opacity .85s ease,filter .85s ease,transform .85s ease}
+.is-revealed .faith-copy-line{opacity:1;filter:blur(0);transform:none}
+@media(prefers-reduced-motion:reduce){.faith-hero img,.faith-spark img,.faith-devotion img{transform:none!important}.faith-glow::after{animation:none;opacity:.55}.faith-copy-line{opacity:1;filter:none;transform:none;transition:none}}

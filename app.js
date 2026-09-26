@@ -253,3 +253,72 @@ video.addEventListener('error', usePoster);
 video.querySelector('source:last-of-type').addEventListener('error', usePoster);
 // app.js is deferred, so both sources may have failed before the listeners above existed.
 if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) usePoster();
+
+// Soft scroll-in reveal for the Faith editorial (any [data-reveal] element).
+const revealables = document.querySelectorAll('[data-reveal]');
+if ('IntersectionObserver' in window) {
+  const revealObserver = new IntersectionObserver(entries => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      entry.target.classList.add('is-revealed');
+      revealObserver.unobserve(entry.target);
+    }
+  }, { threshold: 0.12 });
+  revealables.forEach(el => revealObserver.observe(el));
+} else {
+  revealables.forEach(el => el.classList.add('is-revealed'));
+}
+
+// Faith editorial motion. All transform/opacity only; skipped under reduced motion.
+const faithMotionOK = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+// 1) Line-by-line copy reveal: wrap each rendered line so it can fade/blur in
+//    on its own beat once its [data-reveal] container enters the viewport.
+if (faithMotionOK) {
+  document.querySelectorAll('.faith-hero-copy p, .faith-text, .faith-close p').forEach(par => {
+    const words = par.textContent.trim().split(/\s+/);
+    par.textContent = '';
+    const probes = words.map(word => {
+      const probe = document.createElement('span');
+      probe.textContent = word;
+      par.append(probe, document.createTextNode(' '));
+      return probe;
+    });
+    const lines = [];
+    let top = null;
+    for (const probe of probes) {
+      if (probe.offsetTop !== top) { lines.push([]); top = probe.offsetTop; }
+      lines[lines.length - 1].push(probe.textContent);
+    }
+    par.textContent = '';
+    lines.forEach((lineWords, index) => {
+      const line = document.createElement('span');
+      line.className = 'faith-copy-line';
+      line.style.transitionDelay = `${index * 130}ms`;
+      line.textContent = lineWords.join(' ');
+      par.append(line, document.createTextNode(' '));
+    });
+  });
+  // 2) Subtle parallax at different speeds per image. Images carry a CSS
+  //    scale(1.18) so the drift never exposes an edge.
+  const parallaxItems = [...document.querySelectorAll('[data-parallax]')];
+  let parallaxQueued = false;
+  const applyParallax = () => {
+    parallaxQueued = false;
+    const vh = innerHeight;
+    for (const el of parallaxItems) {
+      const r = el.getBoundingClientRect();
+      if (r.bottom < -80 || r.top > vh + 80) continue;
+      const progress = (r.top + r.height / 2 - vh / 2) / vh;
+      const speed = parseFloat(el.dataset.parallax) || 0;
+      el.style.transform = `translate3d(0, ${(progress * speed).toFixed(1)}px, 0) scale(1.18)`;
+    }
+  };
+  const queueParallax = () => {
+    if (parallaxQueued) return;
+    parallaxQueued = true;
+    requestAnimationFrame(applyParallax);
+  };
+  addEventListener('scroll', queueParallax, { passive: true });
+  addEventListener('resize', queueParallax);
+  applyParallax();
+}
