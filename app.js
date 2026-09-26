@@ -1,29 +1,136 @@
 const $ = selector => document.querySelector(selector);
-const allowedSizes = ['XS','S','M','L','XL'];
+// EDIT EACH DROP HERE. Inventory is a visual, manual value, not live stock or a reservation.
+// Update this only after checking actual sales. Replace sizeGuide when the final blank is chosen.
+const DROP_CONFIG = {
+  stockLeft: 100, editionSize: 100,
+  sizeGuide: [
+    ['XXS', 59, 64, 20.5], ['XS', 61, 67, 21.5],
+    ['S', 63, 71, 23], ['M', 67, 75, 24.5],
+    ['L', 70, 77, 25], ['XL', 73, 79, 25.5],
+    ['XXL', 77, 81, 26], ['3XL', 81, 83, 26.5]
+  ]
+};
+// Future tee, hoodie and cap SKUs go here; each owns its own available sizes and price.
+const PRODUCTS = {
+  'faith-tee': { name: 'FAITH TEE', color: 'JET BLACK', price: 75, image: 'assets/faith-front.png', sizes: ['XS', 'S', 'M', 'L', 'XL'] }
+};
+const CART_KEY = 'soul-bag-v2';
 let cart = [];
-try { const saved = JSON.parse(localStorage.getItem('soul-faith-bag') || '[]'); if(Array.isArray(saved)) cart = [...new Set(saved.filter(s => allowedSizes.includes(s)))]; } catch {}
-function persist(){try{localStorage.setItem('soul-faith-bag',JSON.stringify(cart));}catch{}}
-function renderBag(){
- $('#bag-count').textContent=`(${cart.length})`; $('#drawer-count').textContent=`(${cart.length})`; $('#bag-items').replaceChildren();
- if(!cart.length){const p=document.createElement('p');p.className='empty-bag';p.textContent='A little room for FAITH.';const s=document.createElement('small');s.textContent='Choose your size to add the tee to your bag.';p.append(s);$('#bag-items').append(p);}
- cart.forEach(size=>{const el=document.createElement('article');el.className='cart-item';el.innerHTML=`<img src="assets/faith-front.png" alt="Faith tee" width="105" height="105"><div><h3>FAITH TEE</h3><p>JET BLACK / ${size} / QTY 1</p><p class="item-price">$75 USD</p><button type="button" aria-label="Remove Faith tee size ${size}">Remove</button></div>`;el.querySelector('button').addEventListener('click',()=>{cart=cart.filter(s=>s!==size);persist();renderBag();});$('#bag-items').append(el);});
- $('#bag-summary').hidden=!cart.length;$('#subtotal').textContent=`$${cart.length*75} USD`;
- const url=cart.length===1?window.SOUL_CHECKOUT?.[cart[0]]:'';const valid=typeof url==='string'&&/^https:\/\//.test(url);
- $('#checkout').setAttribute('aria-disabled',String(!valid));$('#checkout').textContent=valid?'CONTINUE TO CHECKOUT ↗':'CHECKOUT OPENING SOON';
- if(valid)$('#checkout').href=url;else $('#checkout').removeAttribute('href');
- $('#checkout-note').textContent=valid?'You’ll continue to secure checkout to complete your order.':'Your selection is saved in this browser. No order has been placed and no payment has been taken.';
+function normalizeCart(value) {
+  if (!Array.isArray(value)) return [];
+  const merged = new Map();
+  for (const row of value) {
+    const { productId, size, quantity } = row || {};
+    if (!PRODUCTS[productId]?.sizes.includes(size) || !Number.isSafeInteger(quantity) || quantity < 1) continue;
+    const key = `${productId}:${size}`;
+    merged.set(key, { productId, size, quantity: Math.min(100, (merged.get(key)?.quantity || 0) + quantity) });
+  }
+  return [...merged.values()];
 }
-$('#open-size').addEventListener('click',()=>$('#size-dialog').showModal());
-$('#open-details').addEventListener('click',()=>$('#details-dialog').showModal());
-$('#open-bag').addEventListener('click',()=>{renderBag();$('#bag-dialog').showModal();});
-$('#add-to-bag').addEventListener('click',()=>{const size=document.querySelector('input[name="size"]:checked')?.value;if(!size){$('#size-error').textContent='Choose your size first.';document.querySelector('input[name="size"]').focus();return;}$('#size-error').textContent='';if(!cart.includes(size))cart.push(size);persist();renderBag();$('#size-dialog').close();$('#bag-dialog').showModal();});
-document.querySelectorAll('input[name="size"]').forEach(i=>i.addEventListener('change',()=>$('#size-error').textContent=''));
-document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>document.getElementById(b.dataset.close).close()));
-document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
+try {
+  const saved = localStorage.getItem(CART_KEY);
+  if (saved) cart = normalizeCart(JSON.parse(saved));
+  else {
+    const legacy = JSON.parse(localStorage.getItem('soul-faith-bag') || '[]');
+    if (Array.isArray(legacy)) cart = normalizeCart(legacy.map(size => ({ productId: 'faith-tee', size, quantity: 1 })));
+  }
+} catch {}
+function persist() { try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch {} }
+function itemNode(tag, className, text) {
+  const el = document.createElement(tag); el.className = className; el.textContent = text; return el;
+}
+function renderBag() {
+  const totalCount = cart.reduce((n, item) => n + item.quantity, 0);
+  $('#bag-count').textContent = `(${totalCount})`;
+  $('#drawer-count').textContent = `(${totalCount})`;
+  const container = $('#bag-items'); container.replaceChildren();
+  if (!cart.length) {
+    const empty = itemNode('p', 'empty-bag', 'A little room for FAITH.');
+    empty.append(itemNode('small', '', 'Choose your size to add the tee to your bag.'));
+    container.append(empty);
+  }
+  for (const item of cart) {
+    const product = PRODUCTS[item.productId];
+    const article = itemNode('article', 'cart-item', '');
+    const img = document.createElement('img'); img.src = product.image; img.alt = product.name; img.width = 105; img.height = 105;
+    const content = document.createElement('div'); content.className = 'cart-item-content';
+    content.append(itemNode('h3', '', product.name), itemNode('p', '', `${product.color} / ${item.size}`), itemNode('p', 'item-price', `$${product.price * item.quantity} USD`));
+    const controls = itemNode('div', 'quantity-controls', '');
+    for (const [label, delta] of [['−', -1], ['+', 1]]) {
+      const button = itemNode('button', '', label);
+      button.type = 'button'; button.setAttribute('aria-label', `${delta < 0 ? 'Decrease' : 'Increase'} ${product.name} size ${item.size} quantity`);
+      button.disabled = delta < 0 ? item.quantity <= 1 : item.quantity >= 100;
+      button.addEventListener('click', () => { item.quantity += delta; persist(); renderBag(); });
+      controls.append(button);
+      if (delta < 0) controls.append(itemNode('span', '', String(item.quantity)));
+    }
+    const remove = itemNode('button', 'remove-item', 'REMOVE'); remove.type = 'button';
+    remove.setAttribute('aria-label', `Remove ${product.name} size ${item.size}`);
+    remove.addEventListener('click', () => { cart = cart.filter(row => row !== item); persist(); renderBag(); });
+    content.append(controls, remove); article.append(img, content); container.append(article);
+  }
+  $('#bag-summary').hidden = !cart.length;
+  $('#subtotal').textContent = `$${cart.reduce((n, item) => n + PRODUCTS[item.productId].price * item.quantity, 0)} USD`;
+}
+function addToBag(productId, size) {
+  const product = PRODUCTS[productId];
+  if (!product?.sizes.includes(size)) return false;
+  const existing = cart.find(item => item.productId === productId && item.size === size);
+  if (existing) existing.quantity = Math.min(existing.quantity + 1, 50);
+  else cart.push({ productId, size, quantity: 1 });
+  persist(); renderBag(); return true;
+}
+function showGuide() {
+  const origin = document.querySelector('dialog[open]');
+  if (origin) { origin.close(); $('#guide-dialog').dataset.returnTo = origin.id; }
+  else delete $('#guide-dialog').dataset.returnTo;
+  $('#guide-dialog').showModal();
+}
+$('#guide-dialog').addEventListener('close', () => {
+  const id = $('#guide-dialog').dataset.returnTo;
+  delete $('#guide-dialog').dataset.returnTo;
+  if (id) document.getElementById(id).showModal();
+});
+document.querySelectorAll('[data-guide]').forEach(button => button.addEventListener('click', showGuide));
+const rows = $('#guide-rows');
+for (const [size, chest, length, sleeve] of DROP_CONFIG.sizeGuide) {
+  const tr = document.createElement('tr');
+  for (const [index, value] of [size, chest, length, sleeve].entries()) {
+    const cell = document.createElement(index ? 'td' : 'th');
+    if (!index) cell.scope = 'row';
+    cell.textContent = value; tr.append(cell);
+  }
+  rows.append(tr);
+}
+document.querySelectorAll('[data-stock]').forEach(el => {
+  el.textContent = `${DROP_CONFIG.stockLeft} of ${DROP_CONFIG.editionSize} pieces remain*`;
+});
+$('#open-size').addEventListener('click', () => $('#size-dialog').showModal());
+$('#open-details').addEventListener('click', () => $('#details-dialog').showModal());
+$('#open-bag').addEventListener('click', () => { renderBag(); $('#bag-dialog').showModal(); });
+$('#add-to-bag').addEventListener('click', () => {
+  const size = document.querySelector('input[name="size"]:checked')?.value;
+  if (!size) { $('#size-error').textContent = 'Choose your size first.'; document.querySelector('input[name="size"]').focus(); return; }
+  $('#size-error').textContent = '';
+  addToBag('faith-tee', size);
+  $('#size-dialog').close(); $('#bag-dialog').showModal();
+});
+document.querySelectorAll('input[name="size"]').forEach(input => input.addEventListener('change', () => $('#size-error').textContent = ''));
+document.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click', () => document.getElementById(button.dataset.close).close()));
+document.querySelectorAll('dialog').forEach(dialog => dialog.addEventListener('click', event => {
+  if (event.target !== dialog) return;
+  const r = dialog.getBoundingClientRect();
+  if (event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close();
+}));
 renderBag();
-
-document.querySelectorAll('input[name="hero-size"]').forEach(input=>input.addEventListener('change',()=>{document.querySelector(`input[name="size"][value="${input.value}"]`).checked=true;document.querySelector('#hero-buy').innerHTML='ADD TO BAG <span>↗</span>';}));
-document.querySelector('#hero-buy').addEventListener('click',()=>{if(document.querySelector('input[name="hero-size"]:checked'))document.querySelector('#add-to-bag').click();else document.querySelector('#size-dialog').showModal();});
+document.querySelectorAll('input[name="hero-size"]').forEach(input => input.addEventListener('change', () => {
+  document.querySelector(`input[name="size"][value="${input.value}"]`).checked = true;
+  $('#hero-buy').innerHTML = 'ADD TO BAG <span>↗</span>';
+}));
+$('#hero-buy').addEventListener('click', () => {
+  if (document.querySelector('input[name="hero-size"]:checked')) $('#add-to-bag').click();
+  else $('#size-dialog').showModal();
+});
 
 // Detail photos open full size in a lightbox; Esc, the × or a click anywhere
 // outside the photo closes it.

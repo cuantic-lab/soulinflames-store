@@ -35,3 +35,32 @@
 .lightbox-close{position:absolute;top:14px;right:20px;padding:6px 10px;border:0;background:none;color:#fff;line-height:1}
 @media(max-width:900px){.detail-grid{grid-template-columns:1fr;gap:28px}.detail-item figcaption{font-size:9px;margin-top:12px}.lightbox{padding:56px 12px 28px}}
 @media(max-width:520px){.hero{--g:clamp(0px,calc((100svh - 664px)/4),40px);height:calc(max(100svh,664px) + 44px);min-height:0;max-height:none}.header{height:62px}.brand{width:150px}.hero-title{top:calc(66px + var(--g))}.hero-title h1{font-size:44px;margin:2px 0 6px}.hero-title p{font-size:10px;line-height:1.5}.rotatable-studio>video,.rotatable-studio>img{height:109vw;top:calc(122px + 2*var(--g))}.hero-purchase{top:calc(528px + 3*var(--g));bottom:auto;gap:4px 20px}.hero-purchase .price{font-size:30px}.hero-purchase .primary-button{margin-top:8px;padding-top:14px;padding-bottom:14px}.launch-note{margin-top:-2px}.hero-bottom{bottom:12px}}
+/* Drop 001 additions: uses the existing palette, type and fine-rule rhythm. */
+.drop-model{padding-block:74px 85px;background:radial-gradient(ellipse at 80% 40%,#2b22201c,transparent 62%),#0d0d0d}
+.drop-content{padding:18px 0 0;max-width:900px}
+.drop-statement{font:clamp(34px,4.6vw,68px)/1.12 Georgia,serif;letter-spacing:-.04em;max-width:850px;margin:40px 0 65px}
+.drop-current,.drop-archive{border-top:1px solid var(--line);padding:22px 0;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;gap:12px}
+.drop-current strong{font:35px Georgia,serif;letter-spacing:-.04em}
+.drop-current>span:last-child{font-size:11px;color:#bbb;text-align:right}
+.drop-archive{color:#888}.drop-archive p{grid-column:2/4;font-size:12px}
+.stock-count{display:block;font-size:10px;letter-spacing:.1em;color:#d3c7b8}
+.hero-purchase .stock-count{margin-top:13px}
+.guide-link{display:inline-block;padding:8px 0;color:#ccc;font-size:10px;letter-spacing:.12em;border-bottom:1px solid #777;text-align:left}
+.hero-guide{margin-top:7px}.drawer .guide-link{margin:0 0 22px}.hero-purchase .launch-note{margin-top:5px}
+.quantity-controls{display:inline-flex;align-items:center;gap:0;border:1px solid var(--line);margin:12px 14px 10px 0}
+.cart-item .quantity-controls button{padding:5px 11px;font-size:16px;text-decoration:none;min-width:32px}
+.quantity-controls button:disabled{opacity:.4;cursor:default}.quantity-controls span{min-width:22px;text-align:center}
+.cart-item-content{flex:1}.cart-item .remove-item{color:#aaa;letter-spacing:.12em;font-size:9px}
+.checkout:disabled{background:#292929;color:#aaa;border-color:#333;cursor:not-allowed}
+.size-guide{width:min(720px,calc(100% - 32px));max-height:min(740px,calc(100% - 32px));padding:32px;background:#131313;border:1px solid #ffffff35;color:var(--ink)}
+.size-guide::backdrop{background:#000b;backdrop-filter:blur(5px)}
+.size-guide h2{font-size:clamp(38px,6vw,66px);margin:32px 0 18px}
+.guide-intro,.guide-disclaimer{font-size:12px;color:#aaa;margin-bottom:25px}.guide-disclaimer{margin:20px 0 0}
+.guide-scroll{overflow-x:auto}.size-guide table{border-collapse:collapse;width:100%;min-width:470px;text-align:left}
+.size-guide th,.size-guide td{padding:9px 12px;border-bottom:1px solid var(--line);font-size:12px}
+.size-guide thead th{font-size:9px;letter-spacing:.1em;color:#aaa;white-space:nowrap}.size-guide tbody th{font-weight:600}
+.guide-tip{margin:24px 0 0;font-size:14px;color:#eee}
+@media(max-width:900px){.drop-model{padding-block:45px}.drop-statement{margin:25px 0 44px}.hero-purchase .stock-count{grid-column:1/3;margin-top:2px}.hero-guide{grid-column:1/3;margin:0;width:max-content}.hero-purchase .launch-note{grid-column:1/3}.drop-current strong{font-size:26px}}
+@media(max-width:520px){.hero-purchase{top:calc(496px + 3*var(--g));gap:2px 20px}.hero-purchase .primary-button{margin-top:5px}.hero-purchase .launch-note{font-size:7px}.hero-guide{font-size:9px;padding:2px 0}.hero-purchase .stock-count{font-size:9px}.drop-current{grid-template-columns:1fr 1fr}.drop-current>span:last-child{text-align:left;grid-column:1/3}.drop-archive{display:block}.drop-archive p{margin-top:12px}.size-guide{padding:22px 16px}.size-guide th,.size-guide td{padding:8px 9px}}
+@media(max-width:520px){.size-guide table{min-width:0;table-layout:fixed}.size-guide th,.size-guide td{padding:8px 3px;font-size:11px}.size-guide thead th{font-size:7px;letter-spacing:.02em;white-space:normal;line-height:1.3}.size-guide th:first-child{width:18%}.size-guide th:nth-child(2){width:27%}.size-guide th:nth-child(3){width:29%}.size-guide th:nth-child(4){width:26%}}
+.drop-inventory-note{font-size:10px;color:#777;margin:0 0 25px}
