@@ -34,9 +34,13 @@ const frameCount = 120;
 const fps = 12;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let dragStart = 0;
+let dragStartY = 0;
 let frameAtStart = 0;
 let scrubbing = false;
 let resumeAfterDrag = false;
+let activePointer = null;
+let axis = null; // 'x' scrubs; 'y' is left to the browser as a normal page scroll
+let rotating = false;
 let pendingFrame = null;
 const currentFrame = () => Math.floor(video.currentTime * fps + 1e-3) % frameCount;
 const showFrame = index => {
@@ -53,23 +57,47 @@ video.addEventListener('seeked', () => {
 const autoplay = () => { if (!reduceMotion.matches) video.play().catch(() => {}); };
 reduceMotion.addEventListener('change', () => reduceMotion.matches ? video.pause() : autoplay());
 autoplay();
-rotator.addEventListener('pointerdown', event => {
-  dragStart = event.clientX;
+// Touch decides the gesture from its first pixels: mostly horizontal scrubs,
+// mostly vertical is ignored so the page scrolls (CSS touch-action: pan-y).
+const axisThreshold = 10;
+const beginRotate = event => {
+  rotating = true;
   frameAtStart = currentFrame();
-  scrubbing = false;
   resumeAfterDrag = !video.paused;
   video.pause();
   rotator.setPointerCapture(event.pointerId);
   rotator.classList.add('dragging');
+};
+rotator.addEventListener('pointerdown', event => {
+  if (activePointer !== null) return;
+  activePointer = event.pointerId;
+  dragStart = event.clientX;
+  dragStartY = event.clientY;
+  scrubbing = false;
+  rotating = false;
+  axis = event.pointerType === 'mouse' ? 'x' : null;
+  if (axis === 'x') beginRotate(event);
 });
 rotator.addEventListener('pointermove', event => {
-  if (!rotator.hasPointerCapture(event.pointerId)) return;
+  if (event.pointerId !== activePointer) return;
   const distance = event.clientX - dragStart;
+  if (axis === null) {
+    const dy = event.clientY - dragStartY;
+    if (Math.max(Math.abs(distance), Math.abs(dy)) < axisThreshold) return;
+    axis = Math.abs(distance) > Math.abs(dy) ? 'x' : 'y';
+    if (axis === 'x') beginRotate(event);
+  }
+  if (axis !== 'x') return;
   if (Math.abs(distance) < 4) return;
   scrubbing = true;
   showFrame(((frameAtStart + Math.round(distance / 7)) % frameCount + frameCount) % frameCount);
 });
 const endRotate = event => {
+  if (event.pointerId !== activePointer) return;
+  activePointer = null;
+  axis = null;
+  if (!rotating) return;
+  rotating = false;
   if (rotator.hasPointerCapture(event.pointerId)) rotator.releasePointerCapture(event.pointerId);
   rotator.classList.remove('dragging');
   if (scrubbing) event.preventDefault();
