@@ -45,10 +45,14 @@ lightbox.addEventListener('click', event => { if (event.target !== lightboxImage
 const rotator = document.querySelector('#studio');
 const video = document.querySelector('#tee-rotator');
 const hit = rotator.querySelector('.tee-hit');
-const frameCount = 120;
-const fps = 12;
-// Where the tee sits inside the 1920x1080 video, across its whole turn (floor excluded).
-const teeBox = { x: 656, y: 210, width: 607, height: 690 };
+const frameCount = 240;
+const fps = 24;
+// One full turn takes the same 840 px of drag as the original 120-frame turntable.
+const pixelsPerFrame = 3.5;
+const videoWidth = 1280;
+const videoHeight = 720;
+// Where the tee sits inside the video, across its whole turn (floor excluded).
+const teeBox = { x: 360, y: 78, width: 560, height: 566 };
 let dragStart = 0;
 let dragStartY = 0;
 let frameAtStart = 0;
@@ -74,9 +78,9 @@ video.addEventListener('seeked', () => {
 const placeHit = () => {
   const box = rotator.getBoundingClientRect();
   const media = video.getBoundingClientRect();
-  const scale = Math.max(media.width / 1920, media.height / 1080);
-  const left = media.left - box.left + (media.width - 1920 * scale) / 2 + teeBox.x * scale;
-  const top = media.top - box.top + (media.height - 1080 * scale) / 2 + teeBox.y * scale;
+  const scale = Math.max(media.width / videoWidth, media.height / videoHeight);
+  const left = media.left - box.left + (media.width - videoWidth * scale) / 2 + teeBox.x * scale;
+  const top = media.top - box.top + (media.height - videoHeight * scale) / 2 + teeBox.y * scale;
   const clipTop = Math.max(top, media.top - box.top);
   const clipBottom = Math.min(top + teeBox.height * scale, media.bottom - box.top);
   Object.assign(hit.style, { left: `${left}px`, top: `${clipTop}px`, width: `${teeBox.width * scale}px`, height: `${Math.max(0, clipBottom - clipTop)}px` });
@@ -114,7 +118,7 @@ hit.addEventListener('pointermove', event => {
   if (axis !== 'x') return;
   if (Math.abs(distance) < 4) return;
   scrubbing = true;
-  showFrame(((frameAtStart + Math.round(distance / 7)) % frameCount + frameCount) % frameCount);
+  showFrame(((frameAtStart + Math.round(distance / pixelsPerFrame)) % frameCount + frameCount) % frameCount);
 });
 const endRotate = event => {
   if (event.pointerId !== activePointer) return;
@@ -132,7 +136,7 @@ hit.addEventListener('pointercancel', endRotate);
 const usePoster = () => {
   const still = new Image();
   still.id = 'tee-rotator';
-  still.src = 'assets/tshirt-rotate-banner-poster.jpg';
+  still.src = 'assets/tshirt-rotate-banner-poster.jpg?v=2';
   still.alt = 'Faith tee en un estudio';
   still.draggable = false;
   video.replaceWith(still);
