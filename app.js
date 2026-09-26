@@ -24,3 +24,121 @@ renderBag();
 
 document.querySelectorAll('input[name="hero-size"]').forEach(input=>input.addEventListener('change',()=>{document.querySelector(`input[name="size"][value="${input.value}"]`).checked=true;document.querySelector('#hero-buy').innerHTML='ADD TO BAG <span>↗</span>';}));
 document.querySelector('#hero-buy').addEventListener('click',()=>{if(document.querySelector('input[name="hero-size"]:checked'))document.querySelector('#add-to-bag').click();else document.querySelector('#size-dialog').showModal();});
+
+// Detail photos open full size in a lightbox; Esc, the × or a click anywhere
+// outside the photo closes it.
+const lightbox = document.querySelector('#detail-lightbox');
+const lightboxImage = lightbox.querySelector('img');
+const lightboxCaption = lightbox.querySelector('figcaption');
+document.querySelectorAll('.detail-open').forEach(button => button.addEventListener('click', () => {
+  const image = button.querySelector('img');
+  lightboxImage.src = image.currentSrc || image.src;
+  lightboxImage.alt = image.alt;
+  lightboxCaption.textContent = button.closest('figure').querySelector('figcaption').textContent;
+  lightbox.showModal();
+}));
+lightbox.addEventListener('click', event => { if (event.target !== lightboxImage) lightbox.close(); });
+
+// The turntable is a video that stays still on its first frame. Dragging over
+// the tee (mouse or touch) scrubs through its 120 frames for a tactile
+// front/back turn; nothing moves on its own.
+const rotator = document.querySelector('#studio');
+const video = document.querySelector('#tee-rotator');
+const hit = rotator.querySelector('.tee-hit');
+const frameCount = 120;
+const fps = 12;
+// Where the tee sits inside the 1920x1080 video, across its whole turn (floor excluded).
+const teeBox = { x: 656, y: 210, width: 607, height: 690 };
+let dragStart = 0;
+let dragStartY = 0;
+let frameAtStart = 0;
+let scrubbing = false;
+let activePointer = null;
+let axis = null; // 'x' scrubs; 'y' is left to the browser as a normal page scroll
+let rotating = false;
+let pendingFrame = null;
+let shownFrame = 0;
+const showFrame = index => {
+  shownFrame = index;
+  // Seek to the middle of the frame so rounding never lands on its neighbour.
+  if (video.seeking) { pendingFrame = index; return; }
+  video.currentTime = (index + .5) / fps;
+};
+video.addEventListener('seeked', () => {
+  if (pendingFrame === null) return;
+  const index = pendingFrame;
+  pendingFrame = null;
+  showFrame(index);
+});
+// Keep the drag zone on the tee: follow the video's object-fit: cover crop.
+const placeHit = () => {
+  const box = rotator.getBoundingClientRect();
+  const media = video.getBoundingClientRect();
+  const scale = Math.max(media.width / 1920, media.height / 1080);
+  const left = media.left - box.left + (media.width - 1920 * scale) / 2 + teeBox.x * scale;
+  const top = media.top - box.top + (media.height - 1080 * scale) / 2 + teeBox.y * scale;
+  const clipTop = Math.max(top, media.top - box.top);
+  const clipBottom = Math.min(top + teeBox.height * scale, media.bottom - box.top);
+  Object.assign(hit.style, { left: `${left}px`, top: `${clipTop}px`, width: `${teeBox.width * scale}px`, height: `${Math.max(0, clipBottom - clipTop)}px` });
+};
+new ResizeObserver(placeHit).observe(rotator);
+placeHit();
+// Touch decides the gesture from its first pixels: mostly horizontal scrubs,
+// mostly vertical is ignored so the page scrolls (CSS touch-action: pan-y).
+const axisThreshold = 10;
+const beginRotate = event => {
+  rotating = true;
+  frameAtStart = shownFrame;
+  hit.setPointerCapture(event.pointerId);
+  rotator.classList.add('dragging');
+};
+hit.addEventListener('pointerdown', event => {
+  if (activePointer !== null) return;
+  activePointer = event.pointerId;
+  dragStart = event.clientX;
+  dragStartY = event.clientY;
+  scrubbing = false;
+  rotating = false;
+  axis = event.pointerType === 'mouse' ? 'x' : null;
+  if (axis === 'x') beginRotate(event);
+});
+hit.addEventListener('pointermove', event => {
+  if (event.pointerId !== activePointer) return;
+  const distance = event.clientX - dragStart;
+  if (axis === null) {
+    const dy = event.clientY - dragStartY;
+    if (Math.max(Math.abs(distance), Math.abs(dy)) < axisThreshold) return;
+    axis = Math.abs(distance) > Math.abs(dy) ? 'x' : 'y';
+    if (axis === 'x') beginRotate(event);
+  }
+  if (axis !== 'x') return;
+  if (Math.abs(distance) < 4) return;
+  scrubbing = true;
+  showFrame(((frameAtStart + Math.round(distance / 7)) % frameCount + frameCount) % frameCount);
+});
+const endRotate = event => {
+  if (event.pointerId !== activePointer) return;
+  activePointer = null;
+  axis = null;
+  if (!rotating) return;
+  rotating = false;
+  if (hit.hasPointerCapture(event.pointerId)) hit.releasePointerCapture(event.pointerId);
+  rotator.classList.remove('dragging');
+  if (scrubbing) event.preventDefault();
+};
+hit.addEventListener('pointerup', endRotate);
+hit.addEventListener('pointercancel', endRotate);
+// Fallback: if neither WebM nor MP4 can play, show the still poster instead.
+const usePoster = () => {
+  const still = new Image();
+  still.id = 'tee-rotator';
+  still.src = 'assets/tshirt-rotate-banner-poster.jpg';
+  still.alt = 'Faith tee en un estudio';
+  still.draggable = false;
+  video.replaceWith(still);
+  hit.remove();
+};
+video.addEventListener('error', usePoster);
+video.querySelector('source:last-of-type').addEventListener('error', usePoster);
+// app.js is deferred, so both sources may have failed before the listeners above existed.
+if (video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) usePoster();
