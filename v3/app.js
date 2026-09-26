@@ -25,6 +25,20 @@ renderBag();
 document.querySelectorAll('input[name="hero-size"]').forEach(input=>input.addEventListener('change',()=>{document.querySelector(`input[name="size"][value="${input.value}"]`).checked=true;document.querySelector('#hero-buy').innerHTML='ADD TO BAG <span>↗</span>';}));
 document.querySelector('#hero-buy').addEventListener('click',()=>{if(document.querySelector('input[name="hero-size"]:checked'))document.querySelector('#add-to-bag').click();else document.querySelector('#size-dialog').showModal();});
 
+// Detail photos open full size in a lightbox; Esc, the × or a click anywhere
+// outside the photo closes it.
+const lightbox = document.querySelector('#detail-lightbox');
+const lightboxImage = lightbox.querySelector('img');
+const lightboxCaption = lightbox.querySelector('figcaption');
+document.querySelectorAll('.detail-open').forEach(button => button.addEventListener('click', () => {
+  const image = button.querySelector('img');
+  lightboxImage.src = image.currentSrc || image.src;
+  lightboxImage.alt = image.alt;
+  lightboxCaption.textContent = button.closest('figure').querySelector('figcaption').textContent;
+  lightbox.showModal();
+}));
+lightbox.addEventListener('click', event => { if (event.target !== lightboxImage) lightbox.close(); });
+
 // The turntable is a video that stays still on its first frame. Dragging over
 // the tee (mouse or touch) scrubs through its 120 frames for a tactile
 // front/back turn; nothing moves on its own.
