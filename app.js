@@ -15,6 +15,7 @@ const PRODUCTS = {
   'faith-tee': { name: 'FAITH TEE', color: 'JET BLACK', price: 75, image: 'assets/faith-front.png', sizes: ['XS', 'S', 'M', 'L', 'XL'] }
 };
 const CART_KEY = 'soul-bag-v2';
+const MAX_CART_ITEM_QUANTITY = 100;
 let cart = [];
 function normalizeCart(value) {
   if (!Array.isArray(value)) return [];
@@ -23,7 +24,7 @@ function normalizeCart(value) {
     const { productId, size, quantity } = row || {};
     if (!PRODUCTS[productId]?.sizes.includes(size) || !Number.isSafeInteger(quantity) || quantity < 1) continue;
     const key = `${productId}:${size}`;
-    merged.set(key, { productId, size, quantity: Math.min(100, (merged.get(key)?.quantity || 0) + quantity) });
+    merged.set(key, { productId, size, quantity: Math.min(MAX_CART_ITEM_QUANTITY, (merged.get(key)?.quantity || 0) + quantity) });
   }
   return [...merged.values()];
 }
@@ -59,7 +60,7 @@ function renderBag() {
     for (const [label, delta] of [['−', -1], ['+', 1]]) {
       const button = itemNode('button', '', label);
       button.type = 'button'; button.setAttribute('aria-label', `${delta < 0 ? 'Decrease' : 'Increase'} ${product.name} size ${item.size} quantity`);
-      button.disabled = delta < 0 ? item.quantity <= 1 : item.quantity >= 100;
+      button.disabled = delta < 0 ? item.quantity <= 1 : item.quantity >= MAX_CART_ITEM_QUANTITY;
       button.addEventListener('click', () => { item.quantity += delta; persist(); renderBag(); });
       controls.append(button);
       if (delta < 0) controls.append(itemNode('span', '', String(item.quantity)));
@@ -76,7 +77,7 @@ function addToBag(productId, size) {
   const product = PRODUCTS[productId];
   if (!product?.sizes.includes(size)) return false;
   const existing = cart.find(item => item.productId === productId && item.size === size);
-  if (existing) existing.quantity = Math.min(existing.quantity + 1, 50);
+  if (existing) existing.quantity = Math.min(existing.quantity + 1, MAX_CART_ITEM_QUANTITY);
   else cart.push({ productId, size, quantity: 1 });
   persist(); renderBag(); return true;
 }
