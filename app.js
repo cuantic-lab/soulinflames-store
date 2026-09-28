@@ -1,18 +1,23 @@
 const $ = selector => document.querySelector(selector);
 // EDIT EACH DROP HERE. Inventory is a visual, manual value, not live stock or a reservation.
-// Update this only after checking actual sales. Replace sizeGuide when the final blank is chosen.
+// Update this only after checking actual sales.
+// sizeGuide = final blank (classic loose boxy tee, 230 GSM, 100% cotton).
+// Values: inches with centimeters in parentheses; column order Length / Shoulder / Chest / Sleeve.
 const DROP_CONFIG = {
   stockLeft: 100, editionSize: 100,
   sizeGuide: [
-    ['XXS', 59, 64, 20.5], ['XS', 61, 67, 21.5],
-    ['S', 63, 71, 23], ['M', 67, 75, 24.5],
-    ['L', 70, 77, 25], ['XL', 73, 79, 25.5],
-    ['XXL', 77, 81, 26], ['3XL', 81, 83, 26.5]
+    ['XS', '24.8 (63)', '21.7 (55)', '22.8 (58)', '7.9 (20)'],
+    ['S', '25.2 (64)', '22.4 (57)', '23.6 (60)', '8.3 (21)'],
+    ['M', '25.6 (65)', '23.2 (59)', '24.4 (62)', '8.7 (22)'],
+    ['L', '26.0 (66)', '24.0 (61)', '25.2 (64)', '9.1 (23)'],
+    ['XL', '26.4 (67)', '24.8 (63)', '26.0 (66)', '9.5 (24)'],
+    ['2XL', '26.8 (68)', '25.6 (65)', '26.8 (68)', '9.8 (25)'],
+    ['3XL', '27.2 (69)', '26.4 (67)', '27.6 (70)', '10.2 (26)']
   ]
 };
 // Future tee, hoodie and cap SKUs go here; each owns its own available sizes and price.
 const PRODUCTS = {
-  'faith-tee': { name: 'FAITH TEE', color: 'JET BLACK', price: 75, image: 'assets/faith-front.png', sizes: ['XS', 'S', 'M', 'L', 'XL'] }
+  'faith-tee': { name: 'FAITH TEE', color: 'JET BLACK', price: 75, image: 'assets/faith-front.png', sizes: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'] }
 };
 const CART_KEY = 'soul-bag-v2';
 const MAX_CART_ITEM_QUANTITY = 100;
@@ -94,9 +99,9 @@ $('#guide-dialog').addEventListener('close', () => {
 });
 document.querySelectorAll('[data-guide]').forEach(button => button.addEventListener('click', showGuide));
 const rows = $('#guide-rows');
-for (const [size, chest, length, sleeve] of DROP_CONFIG.sizeGuide) {
+for (const [size, length, shoulder, chest, sleeve] of DROP_CONFIG.sizeGuide) {
   const tr = document.createElement('tr');
-  for (const [index, value] of [size, chest, length, sleeve].entries()) {
+  for (const [index, value] of [size, length, shoulder, chest, sleeve].entries()) {
     const cell = document.createElement(index ? 'td' : 'th');
     if (!index) cell.scope = 'row';
     cell.textContent = value; tr.append(cell);
