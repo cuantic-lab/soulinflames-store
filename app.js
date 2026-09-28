@@ -4,7 +4,7 @@ const $ = selector => document.querySelector(selector);
 // sizeGuide = final blank (classic loose boxy tee, 230 GSM, 100% cotton).
 // Values: inches with centimeters in parentheses; column order Length / Shoulder / Chest / Sleeve.
 const DROP_CONFIG = {
-  stockLeft: 100, editionSize: 100,
+  stockLeft: 333, editionSize: 333,
   sizeGuide: [
     ['XS', '24.8 (63)', '21.7 (55)', '22.8 (58)', '7.9 (20)'],
     ['S', '25.2 (64)', '22.4 (57)', '23.6 (60)', '8.3 (21)'],
